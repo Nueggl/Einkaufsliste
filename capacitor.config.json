@@ -1,0 +1,8 @@
+{
+  "appId": "com.nikni.einkaufsliste",
+  "appName": "Meine Einkaufsliste",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}

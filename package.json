@@ -1,0 +1,20 @@
+{
+  "name": "meine-einkaufsliste",
+  "version": "1.0.0",
+  "description": "Echtzeitfähige, plattformunabhängige Einkaufslisten-App mit Firebase & Capacitor",
+  "main": "www/app.js",
+  "scripts": {
+    "start": "npx serve www",
+    "cap:init": "npx cap init \"Meine Einkaufsliste\" com.nikni.einkaufsliste --web-dir www",
+    "cap:add:android": "npx cap add android",
+    "cap:sync": "npx cap sync",
+    "cap:open:android": "npx cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0"
+  }
+}

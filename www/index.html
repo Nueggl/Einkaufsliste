@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="theme-color" content="#2563eb" />
+  <title>Meine Einkaufsliste</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- ==================== TOP APP BAR ==================== -->
+    <header class="app-header">
+      <button id="btn-menu" class="icon-btn" aria-label="Menü öffnen" title="Menü">
+        <!-- 3 horizontale Striche (Hamburger) -->
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
+      <div class="header-title-wrapper">
+        <h1 id="list-title-display" class="list-title">Lade Liste...</h1>
+        <input
+          type="text"
+          id="list-title-input"
+          class="list-title-input hidden"
+          placeholder="Name der Einkaufsliste..."
+          maxlength="40"
+        />
+      </div>
+
+      <div class="header-actions">
+        <!-- Liste freigeben (6-stelliger Code) -->
+        <button id="btn-share-list" class="icon-btn" aria-label="Liste freigeben" title="Liste freigeben">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
+        </button>
+
+        <!-- Modus-Umschalter: Listenmodus <-> Bearbeitungsmodus -->
+        <button id="btn-mode-toggle" class="mode-toggle-btn" title="Modus wechseln">
+          <span id="mode-toggle-label">Bearbeiten</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ==================== SUB-BAR (Sortierung & Status) ==================== -->
+    <div id="toolbar-bar" class="toolbar-bar">
+      <div class="sort-controls">
+        <span class="sort-label">Sortierung</span>
+        <div class="segmented-control" role="group" aria-label="Sortierung">
+          <button type="button" class="sort-btn active" data-sort="category">Kategorie</button>
+          <button type="button" class="sort-btn" data-sort="asc">A–Z</button>
+          <button type="button" class="sort-btn" data-sort="desc">Z–A</button>
+        </div>
+      </div>
+
+      <button id="btn-clear-checked" class="clear-checked-btn hidden" title="Abgehakte Einträge entfernen">
+        Abgehakte löschen
+      </button>
+    </div>
+
+    <!-- Hinweis-Banner falls Firebase noch Platzhalter hat (Lokaler Offline-Modus) -->
+    <div id="connection-banner" class="connection-banner hidden">
+      <span id="connection-banner-text">Lokaler Modus (Firebase-Config noch nicht eingetragen)</span>
+    </div>
+
+    <!-- ==================== HAUPTBEREICH: EINKAUFSLISTE ==================== -->
+    <main id="list-container" class="list-container">
+      <!-- Wird dynamisch per JS befüllt -->
+    </main>
+
+    <!-- ==================== FLOATING ACTION BUTTON (+) ==================== -->
+    <button id="fab-add-item" class="fab-add" aria-label="Eintrag hinzufügen" title="Eintrag hinzufügen">
+      <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+    </button>
+
+    <!-- ==================== SEITENMENÜ (DRAWER) ==================== -->
+    <div id="drawer-backdrop" class="backdrop hidden"></div>
+    <aside id="side-drawer" class="side-drawer" aria-hidden="true">
+      <div class="drawer-header">
+        <div class="drawer-brand">
+          <span class="brand-icon">🛒</span>
+          <div>
+            <h2>Meine Listen</h2>
+            <p id="auth-status-text" class="auth-subtitle">Synchronisiert</p>
+          </div>
+        </div>
+        <button id="btn-close-drawer" class="icon-btn" aria-label="Menü schließen">✕</button>
+      </div>
+
+      <div class="drawer-content">
+        <!-- Alle Listen des Nutzers -->
+        <div class="drawer-section">
+          <div class="drawer-section-header">
+            <span>Einkaufslisten</span>
+            <button id="btn-new-list-modal" class="btn-small-primary">+ Neu / Beitreten</button>
+          </div>
+          <ul id="drawer-lists" class="drawer-list-items">
+            <!-- Dynamische Liste aller Einkaufslisten -->
+          </ul>
+        </div>
+
+        <hr class="drawer-divider" />
+
+        <!-- Einstellungen -->
+        <div class="drawer-section">
+          <div class="drawer-section-header">
+            <span>Einstellungen</span>
+          </div>
+
+          <!-- Dark / Light Mode Schalter -->
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-title">Dark Mode</span>
+              <span class="setting-desc">Dunkles Erscheinungsbild</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="toggle-darkmode" />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Eigene Kategorien verwalten -->
+          <div class="setting-row setting-row-column">
+            <div class="setting-header-inline">
+              <div>
+                <span class="setting-title">Eigene Kategorien</span>
+                <span class="setting-desc">Standard- &amp; persönliche Kategorien bearbeiten</span>
+              </div>
+              <button id="btn-add-own-category" class="btn-small-outline">+ Kategorie</button>
+            </div>
+            <div id="settings-categories-list" class="settings-categories-list">
+              <!-- Dynamische Liste der eigenen Kategorien -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ==================== GROSSES EINTRAG-POP-UP (FAST-FULLSCREEN) ==================== -->
+    <!-- Passt sich dynamisch der ausgeklappten Smartphone-Tastatur an:
+         Oben die Eingabezeile, unten direkt über der Tastatur die Buttons (Menge / Kategorie / Wichtig)
+         und im freien Zwischenraum die nahtlos verbundenen schwebenden Pop-ups für Menge & Kategorie! -->
+    <div id="item-popup-backdrop" class="popup-backdrop hidden">
+      <div id="item-popup" class="item-popup" role="dialog" aria-modal="true">
+        <!-- Obere Leiste: Links Schließen, Rechts "Nächster Eintrag" -->
+        <div class="popup-topbar">
+          <button type="button" id="btn-popup-close" class="popup-nav-btn popup-close-btn">
+            ✕ Schließen
+          </button>
+          <span id="popup-mode-indicator" class="popup-indicator">Neuer Eintrag</span>
+          <button type="button" id="btn-popup-next" class="popup-nav-btn popup-next-btn">
+            Nächster ↵
+          </button>
+        </div>
+
+        <div id="popup-main-view" class="popup-main-view">
+          <!-- GANZ OBEN: Eingabezeile (Name des Eintrags) -->
+          <div class="popup-top-search">
+            <input
+              type="text"
+              id="item-name-input"
+              class="item-name-input"
+              placeholder="Was möchtest du einkaufen?"
+              autocomplete="off"
+              enterkeyhint="next"
+            />
+          </div>
+
+          <!-- MITTLERER FREIER BEREICH ZWISCHEN EINGABEZEILE & UNTEREN BUTTONS -->
+          <div id="popup-middle-stage" class="popup-middle-stage">
+            <!-- Optional: Löschen/Speichern falls bestehender Eintrag bearbeitet wird -->
+            <div id="popup-edit-actions" class="popup-edit-actions hidden">
+              <button type="button" id="btn-delete-current-item" class="btn-danger-soft">
+                🗑 Löschen
+              </button>
+              <button type="button" id="btn-save-edited-item" class="btn-primary-soft">
+                ✓ Änderungen speichern
+              </button>
+            </div>
+
+            <!-- SCHWEBENDES PANEL 1: MENGEN-EINHEITEN (wächst aus dem linken Mengen-Feld nach oben) -->
+            <div id="qty-Bubble-panel" class="floating-sub-popup qty-bubble hidden">
+              <div class="sub-popup-topbar">
+                <span class="sub-popup-hint">Einheit antippen oder Enter drücken</span>
+                <button type="button" id="btn-confirm-qty-no-unit" class="sub-popup-mini-btn">
+                  Ohne Einheit ↵
+                </button>
+              </div>
+              <p id="qty-error-hint" class="qty-error-hint hidden">
+                Bitte gib unten links zuerst eine Zahl ein!
+              </p>
+              <div class="units-grid">
+                <button type="button" class="unit-btn" data-unit="g">g</button>
+                <button type="button" class="unit-btn" data-unit="kg">kg</button>
+                <button type="button" class="unit-btn" data-unit="Stk.">Stk.</button>
+                <button type="button" class="unit-btn" data-unit="ml">ml</button>
+                <button type="button" class="unit-btn" data-unit="l">l</button>
+                <button type="button" class="unit-btn" data-unit="Bund">Bund</button>
+                <button type="button" class="unit-btn unit-btn-empty" data-unit="">
+                  Keine Einheit
+                </button>
+              </div>
+            </div>
+
+            <!-- SCHWEBENDES PANEL 2: KATEGORIE-AUSWAHL (wächst aus dem rechten Kategorie-Button nach oben) -->
+            <div id="cat-bubble-panel" class="floating-sub-popup cat-bubble hidden">
+              <div class="sub-popup-topbar">
+                <div class="cat-tabs">
+                  <button type="button" id="tab-cat-list" class="cat-tab active">In dieser Liste</button>
+                  <button type="button" id="tab-cat-own" class="cat-tab">Eigene</button>
+                </div>
+                <button type="button" id="btn-shortcut-new-cat" class="sub-popup-mini-btn" title="Neue Kategorie anlegen">
+                  + Neu
+                </button>
+              </div>
+
+              <div id="cat-grid" class="cat-grid">
+                <!-- Dynamische Kategorien (Erst neue Seite wenn Seite voll ist!) -->
+              </div>
+
+              <div id="cat-pagination" class="cat-pagination hidden">
+                <button type="button" id="btn-cat-prev-page" class="page-btn">‹ Zurück</button>
+                <span id="cat-page-indicator" class="page-indicator">1 / 1</span>
+                <button type="button" id="btn-cat-next-page" class="page-btn">Weiter ›</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- GANZ UNTEN DIREKT ÜBER DER TASTATUR: MENGE, KATEGORIE & WICHTIG-BUTTON -->
+          <div class="popup-bottom-dock">
+            <!-- Zeile: Links "Menge" (wird beim Klick zum Zahlen-Textfeld), Rechts "Kategorie" -->
+            <div class="popup-row-selectors">
+              <!-- LINKS: MENGE (Button ODER direktes Zahlen-Textfeld im geöffneten Zustand) -->
+              <div id="qty-pill-slot" class="selector-slot qty-slot">
+                <button type="button" id="btn-open-qty" class="selector-btn">
+                  <span id="btn-qty-label">Menge</span>
+                </button>
+                <button type="button" id="btn-clear-qty" class="selector-clear-btn hidden" aria-label="Menge entfernen">
+                  ✕
+                </button>
+                <!-- Direktes Zahlen-Freitextfeld anstelle des Buttons wenn Mengen-Menü offen ist -->
+                <div id="qty-inline-editor" class="qty-inline-editor hidden">
+                  <input
+                    type="text"
+                    id="qty-number-input"
+                    class="qty-number-input"
+                    inputmode="decimal"
+                    pattern="[0-9.,]*"
+                    placeholder="500"
+                    autocomplete="off"
+                    enterkeyhint="done"
+                  />
+                </div>
+              </div>
+
+              <!-- RECHTS: KATEGORIE (Bleibt als verbundener Fuß des Kategorie-Pop-ups erhalten) -->
+              <div id="cat-pill-slot" class="selector-slot cat-slot">
+                <button type="button" id="btn-open-cat" class="selector-btn">
+                  <span id="btn-cat-color-dot" class="cat-dot hidden"></span>
+                  <span id="btn-cat-label">Kategorie</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Darunter direkt über der Tastatur: WICHTIG BUTTON -->
+            <div class="popup-row-important">
+              <button type="button" id="btn-toggle-important" class="important-toggle-btn" aria-pressed="false">
+                <span class="important-bang">!</span>
+                <span class="important-text">Als wichtig markieren</span>
+                <span id="important-check-indicator" class="important-check"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL: NEUE LISTE STARTEN ODER BEITRETEN ==================== -->
+    <div id="modal-list-action" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Neue Liste oder beitreten</h3>
+          <button type="button" id="btn-close-list-modal" class="icon-btn">✕</button>
+        </div>
+
+        <div class="modal-tabs">
+          <button type="button" id="tab-start-list" class="modal-tab active">Neue Liste starten</button>
+          <button type="button" id="tab-join-list" class="modal-tab">Liste beitreten</button>
+        </div>
+
+        <!-- Tab 1: Neue Liste starten -->
+        <form id="form-create-list" class="modal-body">
+          <label class="field-label" for="input-new-list-name">Name der Einkaufsliste</label>
+          <input
+            type="text"
+            id="input-new-list-name"
+            class="text-input"
+            placeholder="z. B. Wochenendeinkauf, WG-Küche..."
+            required
+            maxlength="40"
+          />
+          <button type="submit" class="btn-primary-full">Neue Liste erstellen</button>
+        </form>
+
+        <!-- Tab 2: Liste mit 6-stelligem Code beitreten -->
+        <form id="form-join-list" class="modal-body hidden">
+          <label class="field-label" for="input-join-code">6-stelliger Freigabecode</label>
+          <input
+            type="text"
+            id="input-join-code"
+            class="text-input code-input"
+            placeholder="123456"
+            inputmode="numeric"
+            pattern="[0-9A-Za-z]{6}"
+            maxlength="6"
+            required
+          />
+          <p class="field-hint">
+            Beim Beitreten übernimmst du automatisch die Kategorien des Listeninhabers für diese Liste.
+          </p>
+          <button type="submit" class="btn-primary-full">Liste beitreten</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL: LISTE FREIGEBEN (6-STELLIGER CODE) ==================== -->
+    <div id="modal-share-list" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Liste freigeben</h3>
+          <button type="button" id="btn-close-share-modal" class="icon-btn">✕</button>
+        </div>
+        <div class="modal-body center-text">
+          <p class="share-description">
+            Teile diesen 6-stelligen Code mit anderen, damit sie deiner Liste <strong id="share-list-name"></strong> beitreten können:
+          </p>
+          <div id="share-code-box" class="share-code-display">------</div>
+          <div class="share-actions">
+            <button type="button" id="btn-copy-share-code" class="btn-primary-full">Code kopieren</button>
+            <button type="button" id="btn-regenerate-share-code" class="btn-secondary-full">Neuen Code generieren</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL: KATEGORIE ANLEGEN / BEARBEITEN ==================== -->
+    <div id="modal-category-editor" class="modal-backdrop hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="cat-modal-title">Kategorie bearbeiten</h3>
+          <button type="button" id="btn-close-cat-modal" class="icon-btn">✕</button>
+        </div>
+        <form id="form-category-editor" class="modal-body">
+          <label class="field-label" for="input-cat-name">Name der Kategorie</label>
+          <input
+            type="text"
+            id="input-cat-name"
+            class="text-input"
+            placeholder="z. B. Tiefkühl, Gewürze, Haustier..."
+            required
+            maxlength="30"
+          />
+
+          <label class="field-label">Farbe auswählen</label>
+          <div class="color-picker-row">
+            <input type="color" id="input-cat-color" class="color-input-native" value="#60a5fa" />
+            <div id="color-presets" class="color-presets">
+              <button type="button" class="color-swatch" data-color="#7dd3fc" style="background:#7dd3fc" title="Hellblau (Kühlung)"></button>
+              <button type="button" class="color-swatch" data-color="#22c55e" style="background:#22c55e" title="Grün (Obst & Gemüse)"></button>
+              <button type="button" class="color-swatch" data-color="#991b1b" style="background:#991b1b" title="Dunkelrot (Trockenwaren)"></button>
+              <button type="button" class="color-swatch" data-color="#ffffff" style="background:#ffffff; box-shadow: inset 0 0 0 1px #cbd5e1;" title="Weiß (Backwaren)"></button>
+              <button type="button" class="color-swatch" data-color="#1e3a8a" style="background:#1e3a8a" title="Dunkelblau (Getränke)"></button>
+              <button type="button" class="color-swatch" data-color="#d6c7b2" style="background:#d6c7b2" title="Beige (Drogerie)"></button>
+              <button type="button" class="color-swatch" data-color="#f59e0b" style="background:#f59e0b" title="Orange"></button>
+              <button type="button" class="color-swatch" data-color="#a855f7" style="background:#a855f7" title="Lila"></button>
+              <button type="button" class="color-swatch" data-color="#ec4899" style="background:#ec4899" title="Pink"></button>
+              <button type="button" class="color-swatch" data-color="#14b8a6" style="background:#14b8a6" title="Türkis"></button>
+            </div>
+          </div>
+
+          <div class="modal-footer-btns">
+            <button type="button" id="btn-delete-category" class="btn-danger-soft hidden">Löschen</button>
+            <button type="submit" class="btn-primary-full">Kategorie speichern</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ==================== TOAST NOTIFICATION ==================== -->
+    <div id="toast-container" class="toast-container"></div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+# Node & NPM
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Build / Dist
+dist/
+www-build/
+
+# Android / Gradle Build-Artefakte
+app/build/
+build/
+.gradle/
+.idea/
+local.properties
+*.iml
+app/*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Capacitor
+.capacitor/
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Lokale Umgebungsvariablen / Geheime Schlüssel (optional, falls ausgelagert)
+.env
+.env.local
+
+# Firebase Konfiguration & Schlüssel
+www/firebase-config.js
+google-services.json
+GoogleService-Info.plist

@@ -1,0 +1,1501 @@
+/* ==========================================================================
+   style.css – Modernes, rahmenloses Floating-Surface-Design (Light & Dark Mode)
+   Optimiert für permanente Smartphone-Tastatur & nahtlose Pop-up-Bubbles
+   ========================================================================== */
+
+:root {
+  /* Light Mode Palette – Sanfte Abstufungen & weiche schwebende Schatten */
+  --bg-app: #eef2f6;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f8fafc;
+  --bg-floating: #ffffff;
+  --bg-input: #f1f5f9;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-checked: #94a3b8;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-soft: #dbeafe;
+  --primary-text: #1e40af;
+  --danger: #ef4444;
+  --danger-soft: #fee2e2;
+  /* Schwebende Schatten statt harter Rahmen */
+  --shadow-xs: 0 2px 6px rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 4px 14px rgba(15, 23, 42, 0.07), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 10px 28px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 18px 42px rgba(15, 23, 42, 0.18), 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-bubble: 0 -8px 30px rgba(15, 23, 42, 0.14), 0 6px 20px rgba(15, 23, 42, 0.08);
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --header-height: 60px;
+  --vvh: 100dvh;
+}
+
+body.dark-mode {
+  /* Dark Mode Palette – Tiefes Slate mit schwebenden Ebenen */
+  --bg-app: #0b1120;
+  --bg-surface: #172033;
+  --bg-surface-elevated: #1e293b;
+  --bg-floating: #243249;
+  --bg-input: #0f172a;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-checked: #475569;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-soft: rgba(59, 130, 246, 0.22);
+  --primary-text: #93c5fd;
+  --danger: #f87171;
+  --danger-soft: rgba(239, 68, 68, 0.2);
+  --shadow-xs: 0 2px 8px rgba(0, 0, 0, 0.32);
+  --shadow-sm: 0 6px 16px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 22px 50px rgba(0, 0, 0, 0.72);
+  --shadow-bubble: 0 -10px 34px rgba(0, 0, 0, 0.6), 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  overflow-x: hidden;
+  user-select: none;
+}
+
+input, button, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  max-width: 768px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* ==========================================================================
+   TOP APP BAR (SCHWEBEND MIT SCHATTEN STATT HARTEM RAHMEN)
+   ========================================================================== */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: var(--header-height);
+  background-color: var(--bg-surface);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 8px;
+  box-shadow: var(--shadow-xs);
+}
+
+.icon-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-main);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.15s, transform 0.1s;
+}
+
+.icon-btn:active {
+  background-color: var(--bg-input);
+  transform: scale(0.94);
+}
+
+.header-title-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+
+.list-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.list-title-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-input);
+  box-shadow: inset 0 0 0 2px var(--primary);
+  outline: none;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mode-toggle-btn {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  background-color: var(--bg-input);
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: all 0.18s ease;
+}
+
+.mode-toggle-btn.edit-active {
+  background-color: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+/* ==========================================================================
+   TOOLBAR (SORTIERUNG & ABGEHAKTE LÖSCHEN)
+   ========================================================================== */
+.toolbar-bar {
+  padding: 10px 14px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sort-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.segmented-control {
+  display: inline-flex;
+  background-color: var(--bg-surface);
+  padding: 4px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-xs);
+}
+
+.sort-btn {
+  border: none;
+  background: transparent;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.sort-btn.active {
+  background-color: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.clear-checked-btn {
+  border: none;
+  background-color: var(--danger-soft);
+  color: var(--danger);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+}
+
+.connection-banner {
+  margin: 6px 14px 0;
+  border-radius: var(--radius-sm);
+  background-color: var(--primary-soft);
+  color: var(--primary-text);
+  font-size: 0.76rem;
+  padding: 6px 12px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   HAUPTLISTE & KATEGORIE-GRUPPEN (SCHWEBENDE KARTEN)
+   ========================================================================== */
+.list-container {
+  flex: 1;
+  padding: 12px 14px 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.category-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 6px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.category-group-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+.items-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Schwebende Eintrags-Karte ohne harten Rahmen */
+.list-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md);
+  min-height: 54px;
+  padding: 10px 14px 10px 18px;
+  box-shadow: var(--shadow-sm);
+  border: none;
+  overflow: hidden;
+  transition: transform 0.12s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.list-item:active {
+  transform: scale(0.985);
+}
+
+/* Dünner vertikaler Streifen in der Kategoriefarbe links am Rand.
+   Bei "Keine Kategorie" ist er komplett unsichtbar (transparent)! */
+.item-category-stripe {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background-color: var(--stripe-color, transparent);
+}
+
+/* Falls die Farbe exakt Weiß (#ffffff) ist (z.B. Backwaren), dezenter Innenschatten zur Erkennbarkeit im Lightmode */
+.item-category-stripe.stripe-white {
+  box-shadow: inset -1px 0 0 rgba(15, 23, 42, 0.12);
+}
+
+/* Wichtig-Ausrufezeichen links vor der Checkbox */
+.item-important-bang {
+  color: var(--danger);
+  font-weight: 900;
+  font-size: 1.18rem;
+  margin-right: 8px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* Checkbox */
+.item-checkbox {
+  width: 23px;
+  height: 23px;
+  border-radius: 8px;
+  background-color: var(--bg-input);
+  box-shadow: inset 0 0 0 2px var(--text-muted);
+  margin-right: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.list-item.checked .item-checkbox {
+  background-color: var(--primary);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.35);
+  color: #ffffff;
+}
+
+.item-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.item-name {
+  font-size: 1rem;
+  line-height: 1.35;
+  word-break: break-word;
+  color: var(--text-main);
+}
+
+/* Wichtig: fett geschrieben */
+.list-item.important .item-name {
+  font-weight: 800;
+}
+
+/* Abgehakt: Text ausgegraut und durchgestrichen */
+.list-item.checked {
+  opacity: 0.62;
+  box-shadow: var(--shadow-xs);
+}
+
+.list-item.checked .item-name,
+.list-item.checked .item-qty-badge {
+  color: var(--text-checked);
+  text-decoration: line-through;
+}
+
+.item-qty-badge {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background-color: var(--bg-input);
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.item-edit-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.item-action-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: none;
+  background-color: var(--bg-input);
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.item-action-btn.delete:active {
+  background-color: var(--danger-soft);
+  color: var(--danger);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 56px 24px;
+  color: var(--text-muted);
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.empty-state-icon {
+  font-size: 2.8rem;
+}
+
+/* ==========================================================================
+   FLOATING ACTION BUTTON (+) UNTEN RECHTS
+   ========================================================================== */
+.fab-add {
+  position: fixed;
+  right: 20px;
+  bottom: 24px;
+  z-index: 25;
+  width: 60px;
+  height: 60px;
+  border-radius: 20px;
+  border: none;
+  background-color: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 10px 26px rgba(37, 99, 235, 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.fab-add:active {
+  transform: scale(0.92);
+}
+
+/* ==========================================================================
+   GROSSES EINTRAG-POP-UP (EXAKT NACH SKIZZE: OBEN SUCHLEISTE, UNTEN DOCK,
+   DAZWISCHEN NAHTLOS VERBUNDENE SCHWEBENDE BUBBLES FÜR MENGE & KATEGORIE)
+   ========================================================================== */
+.popup-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* Passt sich dank VisualViewport exakt an den Bereich oberhalb der Smartphone-Tastatur an! */
+  height: var(--vvh, 100dvh);
+  z-index: 100;
+  background-color: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(4px);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.item-popup {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  height: 100%;
+  background-color: var(--bg-app);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Top-Leiste im Pop-up: Oben links Schließen, Oben rechts Nächster Eintrag */
+.popup-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: var(--bg-surface);
+  box-shadow: var(--shadow-xs);
+  flex-shrink: 0;
+  z-index: 5;
+}
+
+.popup-nav-btn {
+  border: none;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  transition: transform 0.1s;
+}
+
+.popup-nav-btn:active {
+  transform: scale(0.95);
+}
+
+.popup-next-btn {
+  background-color: var(--primary);
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3);
+}
+
+.popup-indicator {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Haupt-Flexcontainer im Pop-up:
+   1. Oben: Eingabezeile (.popup-top-search)
+   2. Mitte: Freier Raum bzw. schwebende Sub-Popups (.popup-middle-stage, flex: 1)
+   3. Unten: Direkt über der Tastatur die Buttons (.popup-bottom-dock) */
+.popup-main-view {
+  flex: 1;
+  min-height: 0;
+  padding: 10px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* 1. OBEN: EINGABEZEILE (wie "SUCHLEISTE" in Skizze 3) */
+.popup-top-search {
+  flex-shrink: 0;
+  z-index: 2;
+}
+
+.item-name-input {
+  width: 100%;
+  padding: 13px 16px;
+  font-size: 1.12rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  border: none;
+  background-color: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+  outline: none;
+  transition: box-shadow 0.18s ease;
+}
+
+.item-name-input:focus {
+  box-shadow: var(--shadow-md), 0 0 0 2px rgba(37, 99, 235, 0.25);
+}
+
+/* 2. MITTE: FREIER PLATZ ZWISCHEN EINGABEZEILE & UNTEREN KNÖPFEN
+   Wenn Menge oder Kategorie aktiv ist, dehnt sich hier das schwebende Pop-up
+   über die volle Breite aus und verbindet sich nahtlos nach unten mit dem jeweiligen Knopf! */
+.popup-middle-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-top: 8px;
+}
+
+.popup-edit-actions {
+  margin: auto 0;
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 10px;
+}
+
+/* Schwebendes Sub-Pop-up für Menge & Kategorie (ohne harte Ränder, mit tiefem Schatten) */
+.floating-sub-popup {
+  position: absolute;
+  inset: 6px 0 0 0;
+  z-index: 15;
+  background-color: var(--bg-floating);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-bubble);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  animation: popSurface 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Nahtlose Verbindung zum linken Mengen-Feld (Skizze 2):
+   Unten links keine Abrundung, damit es direkt in das Zahlenfeld "500" übergeht! */
+.floating-sub-popup.qty-bubble {
+  border-bottom-left-radius: 0;
+}
+
+/* Nahtlose Verbindung zum rechten Kategorie-Button (Skizze 1):
+   Unten rechts keine Abrundung, damit es direkt in den "KATEGORIE"-Button übergeht! */
+.floating-sub-popup.cat-bubble {
+  border-bottom-right-radius: 0;
+}
+
+@keyframes popSurface {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.sub-popup-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sub-popup-hint {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.sub-popup-mini-btn {
+  border: none;
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Einheiten-Grid im schwebenden Mengen-Pop-up (Skizze 2: g, kg, Stk...) */
+.units-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 8px;
+}
+
+.unit-btn {
+  border: none;
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-input);
+  box-shadow: var(--shadow-xs);
+  font-size: 0.98rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.1s, background-color 0.15s;
+}
+
+.unit-btn:active {
+  transform: scale(0.95);
+  background-color: var(--primary);
+  color: #ffffff;
+}
+
+.unit-btn-empty {
+  grid-column: span 3;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.qty-error-hint {
+  color: var(--danger);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  background-color: var(--danger-soft);
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+/* Kategorie-Tabs & Grid im schwebenden Kategorie-Pop-up (Skizze 1) */
+.cat-tabs {
+  display: inline-flex;
+  background-color: var(--bg-input);
+  padding: 3px;
+  border-radius: 999px;
+  gap: 2px;
+}
+
+.cat-tab {
+  border: none;
+  background: transparent;
+  padding: 5px 11px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.cat-tab.active {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  box-shadow: var(--shadow-xs);
+}
+
+.cat-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: 42px;
+  gap: 8px;
+  align-content: start;
+  overflow: hidden;
+}
+
+.cat-choice-btn {
+  position: relative;
+  height: 42px;
+  padding: 0 10px 0 15px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background-color: var(--bg-input);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.1s, background-color 0.15s;
+}
+
+.cat-choice-btn:active {
+  transform: scale(0.97);
+}
+
+.cat-choice-btn.selected {
+  background-color: var(--primary-soft);
+  color: var(--primary-text);
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+.cat-choice-stripe {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  background-color: var(--cat-color, transparent);
+}
+
+.cat-choice-stripe.stripe-white {
+  box-shadow: inset -1px 0 0 rgba(15, 23, 42, 0.15);
+}
+
+.cat-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+.page-btn {
+  border: none;
+  background-color: var(--bg-input);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.page-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.page-indicator {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   3. UNTEN IM POP-UP DIREKT ÜBER DER TASTATUR: MENGE, KATEGORIE & WICHTIG
+   ========================================================================== */
+.popup-bottom-dock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  z-index: 20;
+}
+
+.popup-row-selectors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.selector-slot {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-height: 48px;
+}
+
+/* Wenn das Mengen-Pop-up offen ist, verschmilzt der linke Slot nahtlos nach oben mit der Bubble (Skizze 2)! */
+.selector-slot.qty-slot.bubble-active {
+  background-color: var(--bg-floating);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+  margin-top: -2px;
+  padding-top: 2px;
+}
+
+/* Wenn das Kategorie-Pop-up offen ist, verschmilzt der rechte Slot nahtlos nach oben mit der Bubble (Skizze 1)! */
+.selector-slot.cat-slot.bubble-active .selector-btn {
+  background-color: var(--bg-floating);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+  margin-top: -2px;
+  padding-top: 10px;
+  color: var(--primary);
+}
+
+.selector-btn {
+  flex: 1;
+  min-height: 48px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: none;
+  background-color: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: background-color 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+
+.selector-btn.has-value {
+  background-color: var(--primary-soft);
+  color: var(--primary-text);
+}
+
+/* X-Button direkt hinter dem Mengenwert zum schnellen Entfernen */
+.selector-clear-btn {
+  margin-left: 6px;
+  width: 42px;
+  border-radius: var(--radius-md);
+  border: none;
+  background-color: var(--danger-soft);
+  color: var(--danger);
+  box-shadow: var(--shadow-xs);
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Direktes Zahlen-Freitextfeld anstelle des Mengen-Buttons (Skizze 2: "500" mit Unterstreichung) */
+.qty-inline-editor {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px 8px;
+}
+
+.qty-number-input {
+  width: 100%;
+  padding: 4px 6px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-align: center;
+  border: none;
+  border-bottom: 2.5px solid var(--primary);
+  background: transparent;
+  outline: none;
+}
+
+.cat-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+}
+
+/* Unterste Zeile direkt über der Tastatur: WICHTIG BUTTON */
+.popup-row-important {
+  width: 100%;
+}
+
+.important-toggle-btn {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: none;
+  background-color: var(--bg-surface);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: all 0.15s ease;
+}
+
+.important-bang {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  background-color: var(--danger-soft);
+  color: var(--danger);
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.important-text {
+  flex: 1;
+  text-align: left;
+}
+
+.important-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--bg-input);
+  box-shadow: inset 0 0 0 2px var(--text-muted);
+}
+
+.important-toggle-btn.active {
+  background-color: var(--danger-soft);
+  color: var(--danger);
+}
+
+.important-toggle-btn.active .important-check {
+  background-color: var(--danger);
+  box-shadow: none;
+}
+
+/* ==========================================================================
+   SEITENMENÜ (DRAWER) & EINSTELLUNGEN (MODERNE SCHWEBENDE KARTEN)
+   ========================================================================== */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background-color: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.side-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 70;
+  width: min(330px, 86vw);
+  background-color: var(--bg-app);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  transform: translateX(-105%);
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.side-drawer.open {
+  transform: translateX(0);
+}
+
+.drawer-header {
+  padding: 16px;
+  background-color: var(--bg-surface);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drawer-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon {
+  font-size: 1.5rem;
+}
+
+.drawer-brand h2 {
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.auth-subtitle {
+  font-size: 0.73rem;
+  color: var(--text-muted);
+}
+
+.drawer-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.drawer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.drawer-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.drawer-list-items {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.drawer-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-surface);
+  box-shadow: var(--shadow-xs);
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.94rem;
+  transition: transform 0.1s;
+}
+
+.drawer-list-item:active {
+  transform: scale(0.98);
+}
+
+.drawer-list-item.active {
+  background-color: var(--primary-soft);
+  color: var(--primary-text);
+  box-shadow: var(--shadow-sm);
+}
+
+.drawer-list-meta {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.drawer-divider {
+  border: none;
+  height: 1px;
+  background-color: rgba(148, 163, 184, 0.2);
+}
+
+/* Einstellungen im Drawer */
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background-color: var(--bg-surface);
+  box-shadow: var(--shadow-xs);
+  border-radius: var(--radius-md);
+  gap: 10px;
+}
+
+.setting-row-column {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.setting-header-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.setting-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.setting-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.setting-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.settings-categories-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.setting-cat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  background-color: var(--bg-input);
+  border-radius: var(--radius-sm);
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+
+.setting-cat-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+/* Toggle Switch für Dark/Light Mode */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #cbd5e1;
+  transition: 0.2s;
+  border-radius: 999px;
+}
+
+.slider::before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #ffffff;
+  transition: 0.2s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.switch input:checked + .slider {
+  background-color: var(--primary);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(20px);
+}
+
+/* ==========================================================================
+   MODALS (NEUE LISTE / BEITRETEN / FREIGEBEN / KATEGORIE BEARBEITEN)
+   ========================================================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background-color: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 420px;
+  margin-top: 24px;
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.modal-header {
+  padding: 14px 18px;
+  background-color: var(--bg-surface-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-header h3 {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.modal-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background-color: var(--bg-input);
+  padding: 4px;
+  margin: 14px 18px 0;
+  border-radius: 999px;
+}
+
+.modal-tab {
+  border: none;
+  background: transparent;
+  padding: 8px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.modal-tab.active {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  box-shadow: var(--shadow-xs);
+}
+
+.modal-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.center-text {
+  text-align: center;
+}
+
+.field-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.text-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background-color: var(--bg-input);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+  font-size: 1rem;
+  font-weight: 600;
+  outline: none;
+}
+
+.text-input:focus {
+  box-shadow: inset 0 0 0 2px var(--primary);
+}
+
+.code-input {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.field-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.share-code-display {
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 0.28em;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-input);
+  box-shadow: var(--shadow-xs);
+  color: var(--primary);
+  user-select: all;
+}
+
+.share-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.color-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.color-input-native {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.color-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+}
+
+.modal-footer-btns {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ==========================================================================
+   BUTTON UTILITIES & TOASTS
+   ========================================================================== */
+.btn-primary-full {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background-color: var(--primary);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  cursor: pointer;
+}
+
+.btn-secondary-full {
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-primary-soft {
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background-color: var(--primary);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+
+.btn-danger-soft {
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background-color: var(--danger-soft);
+  color: var(--danger);
+  font-weight: 700;
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+}
+
+.btn-small-primary {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: none;
+  background-color: var(--primary);
+  color: #ffffff;
+  font-size: 0.76rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+}
+
+.btn-small-outline {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: none;
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toast-container {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  width: min(90vw, 380px);
+}
+
+.toast {
+  background-color: #0f172a;
+  color: #ffffff;
+  padding: 11px 16px;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  animation: fadeInUp 0.2s ease-out;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
