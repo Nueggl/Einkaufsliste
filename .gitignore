@@ -44,3 +44,9 @@ Thumbs.db
 www/firebase-config.js
 google-services.json
 GoogleService-Info.plist
+
+# Release-Builds und Signatur-Schlüssel
+release/
+app/release/
+*.jks
+*.keystore
