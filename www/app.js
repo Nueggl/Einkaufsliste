@@ -5,7 +5,7 @@
 // sowie permanente Smartphone-Tastatur im Eintrag-Pop-up mit schwebenden Bubbles.
 // ============================================================================
 
-import { firebaseConfig } from "./firebase-config.js";
+import { firebaseConfig, GEMINI_API_KEY } from "./firebase-config.js";
 
 // Firebase v10+ Modulare Imports über das offizielle Google gstatic CDN
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
@@ -21,6 +21,7 @@ import {
   collection,
   doc,
   setDoc,
+  getDoc,
   getDocs,
   updateDoc,
   onSnapshot,
@@ -72,6 +73,9 @@ const state = {
 
   // Darkmode
   darkMode: localStorage.getItem("einkaufsliste_darkmode") === "true",
+
+  // KI-Kategorisierung mit Gemini aktiv
+  isAutoCategorizing: false,
 
   // Firestore Snapshot-Unsubscribe-Funktionen
   unsubUserProfile: null,
@@ -188,19 +192,40 @@ function getOwnCategoriesWithNone() {
 }
 
 /**
- * Sucht eine Kategorie nach ID (inkl. "Keine Kategorie" als Standard)
+ * Sucht eine Kategorie nach ID oder Name (inkl. "Keine Kategorie" als Standard)
  */
 function resolveCategory(categoryId, list = getActiveList()) {
   if (!categoryId || categoryId === NO_CATEGORY.id) {
     return NO_CATEGORY;
   }
+  const cleanKey = String(categoryId).trim().toLowerCase();
+  if (cleanKey === "keine kategorie" || cleanKey === "cat_none") {
+    return NO_CATEGORY;
+  }
   const listCats = getListCategories(list);
   return (
-    listCats.find((c) => c.id === categoryId) ||
-    state.ownCategories.find((c) => c.id === categoryId) ||
-    DEFAULT_CATEGORIES.find((c) => c.id === categoryId) ||
+    listCats.find((c) => c.id === categoryId || (c.name && c.name.toLowerCase() === cleanKey)) ||
+    state.ownCategories.find((c) => c.id === categoryId || (c.name && c.name.toLowerCase() === cleanKey)) ||
+    DEFAULT_CATEGORIES.find((c) => c.id === categoryId || (c.name && c.name.toLowerCase() === cleanKey)) ||
     NO_CATEGORY
   );
+}
+
+/**
+ * Prüft, ob ein Eintrag noch keine gültige Kategorie zugewiesen hat
+ * (Kategorie leer, undefined, "cat_none" oder auf "keine kategorie" gesetzt).
+ */
+function isItemUncategorized(item) {
+  if (!item) return false;
+  const catVal = item.categoryId || item.category || "";
+  if (!catVal || catVal === NO_CATEGORY.id || catVal === "cat_none") {
+    return true;
+  }
+  const cat = resolveCategory(catVal);
+  if (!cat || cat.id === NO_CATEGORY.id || (cat.name && cat.name.trim().toLowerCase() === "keine kategorie")) {
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -651,6 +676,8 @@ function renderHeaderAndToolbar() {
   const modeBtn = document.getElementById("btn-mode-toggle");
   const modeLabel = document.getElementById("mode-toggle-label");
   const clearCheckedBtn = document.getElementById("btn-clear-checked");
+  const autoCatBtn = document.getElementById("btn-auto-categorize");
+  const autoCatSpinner = document.getElementById("auto-cat-spinner");
 
   const listName = list ? list.name : "Keine Liste";
   titleDisplay.textContent = listName;
@@ -670,6 +697,29 @@ function renderHeaderAndToolbar() {
 
   const hasChecked = list && Array.isArray(list.items) && list.items.some((i) => i.checked);
   clearCheckedBtn.classList.toggle("hidden", !hasChecked);
+
+  // KI Automatische Sortierung: Button nur sichtbar/klickbar, wenn unkategorisierte Einträge existieren
+  if (autoCatBtn) {
+    const hasUncategorized = list && Array.isArray(list.items) && list.items.some(isItemUncategorized);
+    const autoCatLabel = autoCatBtn.querySelector(".auto-cat-label");
+    const autoCatIcon = autoCatBtn.querySelector(".auto-cat-icon");
+
+    if (state.isAutoCategorizing) {
+      autoCatBtn.classList.remove("hidden");
+      autoCatBtn.classList.add("loading");
+      autoCatBtn.disabled = true;
+      if (autoCatSpinner) autoCatSpinner.classList.remove("hidden");
+      if (autoCatIcon) autoCatIcon.classList.add("hidden");
+      if (autoCatLabel) autoCatLabel.textContent = "Sortiere...";
+    } else {
+      autoCatBtn.classList.remove("loading");
+      autoCatBtn.disabled = false;
+      autoCatBtn.classList.toggle("hidden", !hasUncategorized);
+      if (autoCatSpinner) autoCatSpinner.classList.add("hidden");
+      if (autoCatIcon) autoCatIcon.classList.remove("hidden");
+      if (autoCatLabel) autoCatLabel.textContent = "Sortieren";
+    }
+  }
 }
 
 function renderShoppingList() {
@@ -864,6 +914,208 @@ async function clearCheckedItems() {
 }
 
 // ============================================================================
+// 7b. KI-AUTOMATISCHE KATEGORISIERUNG (GOOGLE GEMINI API: gemini-3.1-flash-lite)
+// ============================================================================
+async function autoCategorizeItems() {
+  if (state.isAutoCategorizing) return;
+
+  const list = getActiveList();
+  if (!list) {
+    showToast("Keine aktive Einkaufsliste geöffnet.");
+    return;
+  }
+
+  // Überprüfen, ob der Gemini API-Schlüssel konfiguriert ist
+  if (
+    !GEMINI_API_KEY ||
+    GEMINI_API_KEY === "DEIN_KEY" ||
+    GEMINI_API_KEY === "DEIN_GEMINI_KEY" ||
+    !GEMINI_API_KEY.trim()
+  ) {
+    showToast("Bitte trage zuerst deinen Gemini API-Key in firebase-config.js ein.");
+    console.warn("Gemini API-Key fehlt in firebase-config.js");
+    return;
+  }
+
+  // 1. Lade alle aktuell verfügbaren "eigenen Kategorien" aus dem Firestore-Dokument der aktiven Liste
+  let listCategories = [];
+  if (state.isFirebaseConfigured && state.db && state.activeListId) {
+    try {
+      const listDocSnap = await getDoc(doc(state.db, "lists", state.activeListId));
+      if (listDocSnap.exists()) {
+        const firestoreData = listDocSnap.data();
+        if (Array.isArray(firestoreData.listCategories)) {
+          listCategories = firestoreData.listCategories;
+          list.listCategories = listCategories;
+        }
+        if (Array.isArray(firestoreData.items)) {
+          list.items = firestoreData.items;
+        }
+      }
+    } catch (err) {
+      console.warn("Konnte Listendokument nicht frisch aus Firestore abrufen, nutze lokalen Zustand:", err);
+      listCategories = list.listCategories || [];
+    }
+  } else {
+    listCategories = list.listCategories || [];
+  }
+
+  const allAvailableCats = getListCategories(list);
+  const validCategories = allAvailableCats.filter(
+    (c) => c && c.id !== NO_CATEGORY.id && c.name && c.name.trim().toLowerCase() !== "keine kategorie"
+  );
+  const categoryNames = validCategories.map((c) => c.name.trim());
+
+  if (categoryNames.length === 0) {
+    showToast("Keine Kategorien für diese Liste gefunden.");
+    return;
+  }
+
+  // 2. Filtere alle Artikel der aktuellen Liste, die noch keine gültige Kategorie haben
+  const itemsToSort = (list.items || []).filter(isItemUncategorized);
+  if (itemsToSort.length === 0) {
+    showToast("Alle Artikel haben bereits eine Kategorie.");
+    renderHeaderAndToolbar();
+    return;
+  }
+
+  // 3. Lade-Indikator (Spinner) in der UI aktivieren
+  state.isAutoCategorizing = true;
+  renderHeaderAndToolbar();
+
+  try {
+    // System-Prompt & User-Input für Gemini vorbereiten
+    const systemPrompt = `Du bist ein Assistent für eine Einkaufsliste. 
+Verfügbare Kategorien: ${categoryNames.join(", ")}.
+Ordne die folgenden Artikel diesen Kategorien zu. Wenn ein Artikel in keine der Kategorien passt, weise ihm den Wert 'keine kategorie' zu.
+Antworte AUSSCHLIESSLICH mit einem validen JSON-Objekt, bei dem der Schlüssel der Artikelname und der Wert die Kategorie ist. Keine Markdown-Blöcke, kein anderer Text.`;
+
+    const itemNames = itemsToSort.map((i) => i.name.trim());
+    const userContent = JSON.stringify(itemNames);
+
+    const endpointUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${encodeURIComponent(GEMINI_API_KEY.trim())}`;
+
+    const response = await fetch(endpointUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        system_instruction: {
+          parts: [{ text: systemPrompt }]
+        },
+        contents: [
+          {
+            parts: [{ text: userContent }]
+          }
+        ],
+        generationConfig: {
+          response_mime_type: "application/json"
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errBody = await response.json().catch(() => ({}));
+      const errorMsg = errBody?.error?.message || `HTTP ${response.status} (${response.statusText})`;
+      throw new Error(errorMsg);
+    }
+
+    const data = await response.json();
+    const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!candidateText) {
+      throw new Error("Keine Antwort von Gemini erhalten.");
+    }
+
+    // Markdown-Codeblöcke abfangen falls Gemini sie trotz Anweisung mitsendet
+    let cleanedText = candidateText.trim();
+    if (cleanedText.startsWith("```json")) {
+      cleanedText = cleanedText.replace(/^```json\s*/i, "").replace(/\s*```$/, "");
+    } else if (cleanedText.startsWith("```")) {
+      cleanedText = cleanedText.replace(/^```\s*/, "").replace(/\s*```$/, "");
+    }
+
+    const parsedData = JSON.parse(cleanedText);
+
+    // Normalisieren falls Array oder Wrapper-Objekt zurückgeliefert wurde
+    let mapping = parsedData;
+    if (Array.isArray(parsedData)) {
+      mapping = {};
+      parsedData.forEach((entry) => {
+        if (entry && typeof entry === "object") {
+          Object.assign(mapping, entry);
+        }
+      });
+    } else if (parsedData && typeof parsedData === "object" && parsedData.items && typeof parsedData.items === "object") {
+      mapping = parsedData.items;
+    }
+
+    // 4. Artikel mit den von Gemini erkannten Kategorien aktualisieren
+    let updatedCount = 0;
+    itemsToSort.forEach((item) => {
+      let assignedCatName = mapping[item.name];
+      if (!assignedCatName) {
+        // Fallback: Case-insensitiver Abgleich des Artikelnamens
+        const matchedKey = Object.keys(mapping).find(
+          (k) => k.trim().toLowerCase() === item.name.trim().toLowerCase()
+        );
+        if (matchedKey) assignedCatName = mapping[matchedKey];
+      }
+
+      if (assignedCatName && typeof assignedCatName === "string") {
+        const cleanAssigned = assignedCatName.trim();
+        if (cleanAssigned.toLowerCase() !== "keine kategorie") {
+          const matchedCategory = validCategories.find(
+            (c) => c.name.trim().toLowerCase() === cleanAssigned.toLowerCase()
+          );
+          if (matchedCategory) {
+            item.categoryId = matchedCategory.id;
+            item.category = matchedCategory.name;
+            if (!list.listCategories) list.listCategories = [];
+            if (!list.listCategories.some((c) => c.id === matchedCategory.id)) {
+              list.listCategories.push({ ...matchedCategory });
+            }
+            updatedCount++;
+            return;
+          }
+        }
+      }
+
+      // Falls keine oder unbekannte Kategorie -> 'keine kategorie'
+      item.categoryId = NO_CATEGORY.id;
+      item.category = NO_CATEGORY.name;
+    });
+
+    // Firestore-Dokument der Liste aktualisieren
+    list.updatedAt = Date.now();
+    if (state.isFirebaseConfigured && state.db) {
+      const listRef = doc(state.db, "lists", list.id);
+      await updateDoc(listRef, {
+        items: list.items,
+        listCategories: list.listCategories || [],
+        updatedAt: list.updatedAt
+      });
+    } else {
+      saveToLocalStorage();
+    }
+
+    // UI unmittelbar nach erfolgreichem Firestore-Schreibvorgang aktualisieren
+    renderAll();
+    showToast(
+      updatedCount > 0
+        ? `✨ ${updatedCount} ${updatedCount === 1 ? "Artikel" : "Artikel"} erfolgreich sortiert!`
+        : "Keine passenden Kategorien gefunden."
+    );
+  } catch (err) {
+    console.error("Fehler bei der automatischen KI-Kategorisierung:", err);
+    showToast(`Fehler bei KI-Sortierung: ${err.message}`);
+  } finally {
+    state.isAutoCategorizing = false;
+    renderHeaderAndToolbar();
+  }
+}
+
+// ============================================================================
 // 8. DRAWER (SEITENMENÜ) & EINSTELLUNGEN RENDERN
 // ============================================================================
 function renderDrawerLists() {
@@ -960,6 +1212,10 @@ function closeItemPopup() {
   }
   state.popup.isOpen = false;
   state.popup.subOverlay = "none";
+  const itemPopupEl = document.getElementById("item-popup");
+  const mainViewEl = document.getElementById("popup-main-view");
+  if (itemPopupEl) itemPopupEl.classList.remove("cat-open");
+  if (mainViewEl) mainViewEl.classList.remove("cat-open");
   document.getElementById("item-popup-backdrop").classList.add("hidden");
 }
 
@@ -967,6 +1223,11 @@ function updatePopupUI() {
   const isEditing = Boolean(state.popup.editingItemId);
   const isQtyOpen = state.popup.subOverlay === "qty";
   const isCatOpen = state.popup.subOverlay === "cat";
+
+  const itemPopupEl = document.getElementById("item-popup");
+  const mainViewEl = document.getElementById("popup-main-view");
+  if (itemPopupEl) itemPopupEl.classList.toggle("cat-open", isCatOpen);
+  if (mainViewEl) mainViewEl.classList.toggle("cat-open", isCatOpen);
 
   document.getElementById("popup-mode-indicator").textContent = isEditing
     ? "Eintrag bearbeiten"
@@ -1451,6 +1712,11 @@ function bindEvents() {
 
   document.getElementById("btn-clear-checked").addEventListener("click", clearCheckedItems);
 
+  const btnAutoCat = document.getElementById("btn-auto-categorize");
+  if (btnAutoCat) {
+    btnAutoCat.addEventListener("click", autoCategorizeItems);
+  }
+
   // 4. Floating Action Button (+) unten rechts
   document.getElementById("fab-add-item").addEventListener("click", () => {
     openItemPopup(null);
@@ -1546,6 +1812,15 @@ function bindEvents() {
   document.getElementById("btn-shortcut-new-cat").addEventListener("click", () => {
     openCategoryEditorModal(null, true);
   });
+
+  const btnCloseCatBubble = document.getElementById("btn-close-cat-bubble");
+  if (btnCloseCatBubble) {
+    btnCloseCatBubble.addEventListener("click", () => {
+      state.popup.subOverlay = "none";
+      updatePopupUI();
+      keepPopupKeyboardAlive();
+    });
+  }
 
   // Wichtig-Markierung umschalten (Tastatur bleibt offen)
   document.getElementById("btn-toggle-important").addEventListener("click", () => {

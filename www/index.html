@@ -61,9 +61,18 @@
         </div>
       </div>
 
-      <button id="btn-clear-checked" class="clear-checked-btn hidden" title="Abgehakte Einträge entfernen">
-        Abgehakte löschen
-      </button>
+      <div class="toolbar-actions">
+        <!-- KI Automatische Kategorisierung (Gemini) -->
+        <button id="btn-auto-categorize" class="auto-cat-btn hidden" title="Sortieren">
+          <span class="auto-cat-icon">✨</span>
+          <span class="auto-cat-label">Liste automatisch sortieren</span>
+          <span id="auto-cat-spinner" class="auto-cat-spinner hidden" aria-hidden="true"></span>
+        </button>
+
+        <button id="btn-clear-checked" class="clear-checked-btn hidden" title="Abgehakte Einträge entfernen">
+          Abgehakte löschen
+        </button>
+      </div>
     </div>
 
     <!-- Hinweis-Banner falls Firebase noch Platzhalter hat (Lokaler Offline-Modus) -->
@@ -220,9 +229,14 @@
                   <button type="button" id="tab-cat-list" class="cat-tab active">In dieser Liste</button>
                   <button type="button" id="tab-cat-own" class="cat-tab">Eigene</button>
                 </div>
-                <button type="button" id="btn-shortcut-new-cat" class="sub-popup-mini-btn" title="Neue Kategorie anlegen">
-                  + Neu
-                </button>
+                <div class="sub-popup-actions">
+                  <button type="button" id="btn-shortcut-new-cat" class="sub-popup-mini-btn" title="Neue Kategorie anlegen">
+                    + Neu
+                  </button>
+                  <button type="button" id="btn-close-cat-bubble" class="sub-popup-mini-btn btn-close-sub" title="Kategorieauswahl schließen">
+                    ✕
+                  </button>
+                </div>
               </div>
 
               <div id="cat-grid" class="cat-grid">
