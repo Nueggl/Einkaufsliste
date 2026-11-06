@@ -1174,6 +1174,7 @@ function renderSettingsCategories() {
 // ============================================================================
 function openItemPopup(existingItem = null) {
   state.popup.isOpen = true;
+  window.history.pushState({ popupOpen: true }, "");
   state.popup.subOverlay = "none";
   state.popup.catTab = "list";
   state.popup.catPage = 0;
@@ -1207,6 +1208,9 @@ function openItemPopup(existingItem = null) {
 
 function closeItemPopup() {
   const nameInput = document.getElementById("item-name-input");
+  if (history.state && history.state.popupOpen === true) {
+      window.history.back();
+  }
   if (!state.popup.editingItemId && nameInput.value.trim().length > 0) {
     commitCurrentPopupItem(false);
   }
@@ -1965,4 +1969,14 @@ document.addEventListener("DOMContentLoaded", () => {
   setupVisualViewportAdapter();
   bindEvents();
   initBackend();
+});
+
+
+//Abfangen der Android Zurück-Taste
+window.addEventListener('popstate', function(event) {
+  // Prüfen, ob das Popup laut App-State gerade offen ist
+  if (state.popup.isOpen === true) {
+      // Rufe hier den exakten Namen deiner Schließen-Funktion auf
+      closeItemPopup(); 
+  }
 });
